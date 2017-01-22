@@ -2,6 +2,8 @@
 
 namespace Agontuk\Schema\Controllers;
 
+use Agontuk\Schema\MigrationCreator;
+use Exception;
 use Illuminate\Http\Request;
 
 if (class_exists("\\Illuminate\\Routing\\Controller")) {
@@ -12,6 +14,17 @@ if (class_exists("\\Illuminate\\Routing\\Controller")) {
 
 class SchemaController extends BaseController
 {
+    private $creator;
+
+    /**
+     * SchemaController constructor.
+     * @param MigrationCreator $creator
+     */
+    function __construct(MigrationCreator $creator)
+    {
+        $this->creator = $creator;
+    }
+
     /**
      * Load the schema designer.
      *
@@ -27,8 +40,19 @@ class SchemaController extends BaseController
         return view('schema::index')->with(compact('css', 'js'));
     }
 
+    /**
+     * Generate migration files based on the data.
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function generateMigration(Request $request)
     {
-        dd($request->all());
+        try {
+            $this->creator->parseAndBuildMigration($request);
+        } catch(Exception $e) {
+            dd($e);
+        }
     }
 }
