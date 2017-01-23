@@ -54,8 +54,20 @@ class SchemaController extends BaseController
             $columns = json_decode($request->get('columns'), true);
 
             $this->creator->parseAndBuildMigration($tables, $columns);
+
+            return response()->json([
+                'success' => [
+                    'message' => 'Migration files generated successfully'
+                ],
+                'status' => 200
+            ]);
         } catch(Exception $e) {
-            dd($e);
+            return response()->json([
+                'error' => [
+                    'message' => $e->getMessage()
+                ],
+                'status' => 200
+            ]);
         }
     }
 }
