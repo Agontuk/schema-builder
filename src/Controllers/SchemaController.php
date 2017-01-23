@@ -2,7 +2,7 @@
 
 namespace Agontuk\Schema\Controllers;
 
-use Agontuk\Schema\MigrationCreator;
+use Agontuk\Schema\Migrations\MigrationCreator;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -20,7 +20,7 @@ class SchemaController extends BaseController
      * SchemaController constructor.
      * @param MigrationCreator $creator
      */
-    function __construct(MigrationCreator $creator)
+    public function __construct(MigrationCreator $creator)
     {
         $this->creator = $creator;
     }
@@ -50,7 +50,10 @@ class SchemaController extends BaseController
     public function generateMigration(Request $request)
     {
         try {
-            $this->creator->parseAndBuildMigration($request);
+            $tables = json_decode($request->get('tables'), true);
+            $columns = json_decode($request->get('columns'), true);
+
+            $this->creator->parseAndBuildMigration($tables, $columns);
         } catch(Exception $e) {
             dd($e);
         }
