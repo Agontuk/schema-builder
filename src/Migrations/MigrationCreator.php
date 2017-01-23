@@ -5,10 +5,20 @@ namespace Agontuk\Schema\Migrations;
 use Illuminate\Database\Migrations\MigrationCreator as MigrationCreatorBase;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
+use League\Flysystem\Filesystem as Flysystem;
+use League\Flysystem\ZipArchive\ZipArchiveAdapter;
 
 class MigrationCreator extends MigrationCreatorBase
 {
+    /**
+     * @var Composer
+     */
     private $composer;
+
+    /**
+     * @var Flysystem
+     */
+    private $flysystem;
 
     /**
      * MigrationCreator constructor.
@@ -20,6 +30,7 @@ class MigrationCreator extends MigrationCreatorBase
     {
         parent::__construct($files);
         $this->composer = $composer;
+        $this->flysystem = new Flysystem(new ZipArchiveAdapter(storage_path('migrations.zip')));
     }
 
     /**
@@ -30,9 +41,13 @@ class MigrationCreator extends MigrationCreatorBase
      *
      * @return string
      */
-    protected function getPath($name, $path)
+    protected function getPath($name, $path = '')
     {
-        return $path . '/' . $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
+        if ($path) {
+            return $path . '/' . $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
+        }
+
+        return $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
     }
 
     /**
@@ -59,32 +74,32 @@ class MigrationCreator extends MigrationCreatorBase
                 $columnData[] = '$table->softDeletes();';
             }
 
-            $migrationPath = database_path() . DIRECTORY_SEPARATOR . 'migrations';
-
             // Write the migration out to disk.
-            $this->createMigration($table['name'], $migrationPath, $columnData);
+            $this->createMigration($table['name'], $columnData);
 
             // Make sure that the migrations are registered by the class loaders.
             $this->composer->dumpAutoloads();
         }
+
+        // All migrations pushed, close the archive.
+        $this->flysystem->getAdapter()->getArchive()->close();
     }
 
     /**
      * Create a new migration at the given path.
      *
      * @param  string $name
-     * @param  string $path
      * @param  array  $columnData
      *
      * @return string
      * @throws \Exception
      */
-    private function createMigration($name, $path, $columnData)
+    private function createMigration($name, $columnData)
     {
         $className = 'Create' . $this->getClassName($name) . 'Table';
         $this->ensureMigrationDoesntAlreadyExist($className);
 
-        $path = $this->getPath($name, $path);
+        $path = $this->getPath($name);
 
         // First we will get the stub file for the migration, which serves as a type
         // of template for the migration. Once we have those we will populate the
@@ -93,7 +108,8 @@ class MigrationCreator extends MigrationCreatorBase
         $create = true;
         $stub = $this->getStub($table, $create);
 
-        $this->files->put($path, $this->populateStubWithData($name, $stub, $table, $columnData));
+        $contents = $this->populateStubWithData($name, $stub, $table, $columnData);
+        $this->flysystem->put($path, $contents);
 
         // $this->firePostCreateHooks();
 
