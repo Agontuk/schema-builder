@@ -20,7 +20,9 @@
             "homepage": "https://github.com/Agontuk"
         }
     ],
-    "require": {},
+    "require": {
+        "illuminate/database": "^5.3"
+    },
     "autoload": {
         "psr-4": {
             "Agontuk\\Schema\\": "src/"
