@@ -4,24 +4,29 @@ namespace Agontuk\Schema\Migrations;
 
 use Illuminate\Database\Migrations\MigrationCreator as MigrationCreatorBase;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Composer;
 
 class MigrationCreator extends MigrationCreatorBase
 {
+    private $composer;
+
     /**
      * MigrationCreator constructor.
      *
      * @param Filesystem $files
+     * @param Composer   $composer
      */
-    public function __construct (Filesystem $files)
+    public function __construct(Filesystem $files, Composer $composer)
     {
         parent::__construct($files);
+        $this->composer = $composer;
     }
 
     /**
      * Get the full path name to the migration.
      *
-     * @param  string  $name
-     * @param  string  $path
+     * @param  string $name
+     * @param  string $path
      *
      * @return string
      */
@@ -54,16 +59,22 @@ class MigrationCreator extends MigrationCreatorBase
                 $columnData[] = '$table->softDeletes();';
             }
 
-            $this->createMigration($table['name'], storage_path(), $columnData);
+            $migrationPath = database_path() . DIRECTORY_SEPARATOR . 'migrations';
+
+            // Write the migration out to disk.
+            $this->createMigration($table['name'], $migrationPath, $columnData);
+
+            // Make sure that the migrations are registered by the class loaders.
+            $this->composer->dumpAutoloads();
         }
     }
 
     /**
      * Create a new migration at the given path.
      *
-     * @param  string  $name
-     * @param  string  $path
-     * @param  array   $columnData
+     * @param  string $name
+     * @param  string $path
+     * @param  array  $columnData
      *
      * @return string
      * @throws \Exception
@@ -92,10 +103,10 @@ class MigrationCreator extends MigrationCreatorBase
     /**
      * Populate the place-holders in the migration stub.
      *
-     * @param  string  $name
-     * @param  string  $stub
-     * @param  string  $table
-     * @param  array   $columnData
+     * @param  string $name
+     * @param  string $stub
+     * @param  string $table
+     * @param  array  $columnData
      *
      * @return string
      */
@@ -117,7 +128,7 @@ class MigrationCreator extends MigrationCreatorBase
     /**
      * Parse column data and generate command strings.
      *
-     * @param array $data
+     * @param  array $data
      *
      * @return string
      */
