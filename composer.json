@@ -21,7 +21,10 @@
         }
     ],
     "require": {
-        "illuminate/database": "^5.3"
+        "illuminate/database": "5.1.*|5.2.*|5.3.*",
+        "illuminate/filesystem": "5.1.*|5.2.*|5.3.*",
+        "illuminate/http": "5.1.*|5.2.*|5.3.*",
+        "illuminate/support": "5.1.*|5.2.*|5.3.*"
     },
     "autoload": {
         "psr-4": {
