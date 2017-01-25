@@ -65,15 +65,15 @@ class MigrationCreator extends MigrationCreatorBase
             $columnData = [];
 
             foreach ($tableColumns as $column) {
-                $columnData[] = $this->buildColumnData($column);
+                $columnData[] = str_repeat(' ', 12) . $this->buildColumnData($column);
             }
 
             if ($table['timeStamp']) {
-                $columnData[] = '$table->timestamps();';
+                $columnData[] = str_repeat(' ', 12) . '$table->timestamps();';
             }
 
             if ($table['softDelete']) {
-                $columnData[] = '$table->softDeletes();';
+                $columnData[] = str_repeat(' ', 12) . '$table->softDeletes();';
             }
 
             // Write the migration out to disk.
