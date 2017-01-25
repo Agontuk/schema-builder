@@ -49,7 +49,7 @@ class MigrationCreator extends MigrationCreatorBase
      */
     public function getStubPath()
     {
-        return __DIR__.'/stubs';
+        return __DIR__ . '/stubs';
     }
 
     /**
@@ -161,39 +161,31 @@ class MigrationCreator extends MigrationCreatorBase
         } else {
             $str .= '$table->' . $data['type'] . '(\'' . $data['name'];
 
-            if (in_array($data['type'], $columnWithLength)) {
-                if (!!$data['length']) {
-                    // Add column length
-                    $str .= ', ' . $data['length'];
-                }
+            if (in_array($data['type'], $columnWithLength) && !!$data['length']) {
+                // Add column length
+                $str .= ', ' . $data['length'];
             }
 
             $str .= '\')';
         }
 
-        if (!!$data['defValue'] && !$data['autoInc']) {
-            $str .= '->default(' . $data['defValue'] . ')';
-        }
+        // Default value check
+        !!$data['defValue'] && !$data['autoInc'] ? $str .= '->default(' . $data['defValue'] . ')' : null;
 
-        if ($data['nullable']) {
-            $str .= '->nullable()';
-        }
+        // Nullable check
+        $data['nullable'] ? $str .= '->nullable()' : null;
 
-        if ($data['unique']) {
-            $str .= '->unique()';
-        }
+        // Unique check
+        $data['unique'] ? $str .= '->unique()' : null;
 
-        if ($data['index']) {
-            $str .= '->index()';
-        }
+        // Index check
+        $data['index'] ? $str .= '->index()' : null;
 
-        if ($data['unsigned'] && !$data['autoInc']) {
-            $str .= '->unsigned()';
-        }
+        // Unsigned check
+        $data['unsigned'] && !$data['autoInc'] ? $str .= '->unsigned()' : null;
 
-        if (!!$data['comment']) {
-            $str .= '->comment(\'' . $data['comment'] . '\')';
-        }
+        // Comment check
+        !!$data['comment'] ? $str .= '->comment(\'' . $data['comment'] . '\')' : null;
 
         // End of statement
         $str .= ';';
