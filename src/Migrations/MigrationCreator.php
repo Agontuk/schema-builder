@@ -33,7 +33,8 @@ class MigrationCreator extends MigrationCreatorBase
      */
     public function parseAndBuildMigration($tables, $columns)
     {
-        $foreignKeyData = [];
+        $foreignKeyUpData = [];
+        $foreignKeyDownData = [];
 
         foreach ($tables as $table) {
             $tableColumns = $columns[$table['id']];
@@ -44,12 +45,15 @@ class MigrationCreator extends MigrationCreatorBase
 
                 // Handle foreign key relations
                 if (!!$column['foreignKey']['references']['id']) {
-                    $foreignKeyData = array_merge($this->buildForeignKeyData([
+                    $foreignKeyData = $this->buildForeignKeyData([
                         'sourceTable'  => $table['name'],
                         'sourceColumn' => $column['name'],
                         'targetTable'  => $column['foreignKey']['on']['name'],
                         'targetColumn' => $column['foreignKey']['references']['name']
-                    ]), $foreignKeyData);
+                    ]);
+
+                    $foreignKeyUpData = array_merge($foreignKeyData['up'], $foreignKeyUpData);
+                    $foreignKeyDownData = array_merge($foreignKeyData['down'], $foreignKeyDownData);
                 }
             }
 
@@ -65,12 +69,17 @@ class MigrationCreator extends MigrationCreatorBase
             $this->createMigration($table['name'], $columnData);
         }
 
+        // Write foreign key migration out to disk.
+        if (count($foreignKeyUpData)) {
+            $this->createForeignKeyMigration($foreignKeyUpData, $foreignKeyDownData);
+        }
+
         // All migrations pushed, close the archive.
         $this->flysystem->getAdapter()->getArchive()->close();
     }
 
     /**
-     * Create a new migration at the given path.
+     * Create a new migration & push it to the zip archive.
      *
      * @param  string $name
      * @param  array  $columnData
@@ -87,6 +96,30 @@ class MigrationCreator extends MigrationCreatorBase
         $stub = $this->files->get(__DIR__ . '/stubs/create.stub');
 
         $contents = $this->populateStubWithData($name, $stub, $columnData);
+        $this->flysystem->put($path, $contents);
+
+        return $path;
+    }
+
+    /**
+     * Create a new foreign key migration & push it to the zip archive.
+     *
+     * @param  array $upData
+     * @param  array $downData
+     *
+     * @return string
+     */
+    private function createForeignKeyMigration($upData, $downData)
+    {
+        $path = $this->getDatePrefix() . '_create_foreign_keys_table.php';
+
+        // First we will get the stub file for the migration, which serves as a type
+        // of template for the migration. Once we have those we will populate the
+        // various place-holders, save the file, and run the post create event.
+        $stub = $this->files->get(__DIR__ . '/stubs/foreignKey.stub');
+
+        $contents = str_replace('return 1;', implode(PHP_EOL, $upData), $stub);
+        $contents = str_replace('return 2;', implode(PHP_EOL, $downData), $contents);
         $this->flysystem->put($path, $contents);
 
         return $path;
@@ -175,17 +208,31 @@ class MigrationCreator extends MigrationCreatorBase
      * @return array
      */
     private function buildForeignKeyData($data) {
-        $str[] = str_repeat(' ', 8) .
+        $upData[] = str_repeat(' ', 8) .
             sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $data['sourceTable']);
 
-        $str[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
+        $upData[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
             $data['sourceColumn'], $data['targetColumn'], $data['targetTable']);
 
-        $str[] = str_repeat(' ', 8) . '});';
+        $upData[] = str_repeat(' ', 8) . '});';
 
         // For new line
-        $str[] = '';
+        $upData[] = '';
 
-        return $str;
+        $downData[] = str_repeat(' ', 8) .
+            sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $data['sourceTable']);
+
+        $index = sprintf('%s_%s_foreign', $data['sourceTable'], $data['sourceColumn']);
+        $downData[] = str_repeat(' ', 12) . sprintf('$table->dropForeign(\'%s\');', $index);
+
+        $downData[] = str_repeat(' ', 8) . '});';
+
+        // For new line
+        $downData[] = '';
+
+        return [
+            'up'   => $upData,
+            'down' => $downData
+        ];
     }
 }
