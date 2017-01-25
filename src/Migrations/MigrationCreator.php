@@ -4,17 +4,11 @@ namespace Agontuk\Schema\Migrations;
 
 use Illuminate\Database\Migrations\MigrationCreator as MigrationCreatorBase;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Composer;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\ZipArchive\ZipArchiveAdapter;
 
 class MigrationCreator extends MigrationCreatorBase
 {
-    /**
-     * @var Composer
-     */
-    private $composer;
-
     /**
      * @var Flysystem
      */
@@ -24,12 +18,10 @@ class MigrationCreator extends MigrationCreatorBase
      * MigrationCreator constructor.
      *
      * @param Filesystem $files
-     * @param Composer   $composer
      */
-    public function __construct(Filesystem $files, Composer $composer)
+    public function __construct(Filesystem $files)
     {
         parent::__construct($files);
-        $this->composer = $composer;
         $this->flysystem = new Flysystem(new ZipArchiveAdapter(storage_path('migrations.zip')));
     }
 
@@ -76,9 +68,6 @@ class MigrationCreator extends MigrationCreatorBase
 
             // Write the migration out to disk.
             $this->createMigration($table['name'], $columnData);
-
-            // Make sure that the migrations are registered by the class loaders.
-            $this->composer->dumpAutoloads();
         }
 
         // All migrations pushed, close the archive.

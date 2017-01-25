@@ -5,19 +5,25 @@ namespace Agontuk\Schema\Controllers;
 use Agontuk\Schema\Migrations\MigrationCreator;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as LaravelController;
+use Laravel\Lumen\Routing\Controller as LumenController;
 
 if (class_exists("\\Illuminate\\Routing\\Controller")) {
-    class BaseController extends \Illuminate\Routing\Controller {}
+    class BaseController extends LaravelController {}
 } else if (class_exists("Laravel\\Lumen\\Routing\\Controller")) {
-    class BaseController extends \Laravel\Lumen\Routing\Controller {}
+    class BaseController extends LumenController {}
 }
 
 class SchemaController extends BaseController
 {
+    /**
+     * @var MigrationCreator
+     */
     private $creator;
 
     /**
      * SchemaController constructor.
+     *
      * @param MigrationCreator $creator
      */
     public function __construct(MigrationCreator $creator)
@@ -56,9 +62,9 @@ class SchemaController extends BaseController
             $this->creator->parseAndBuildMigration($tables, $columns);
 
             return response()->download(storage_path('migrations.zip'))->deleteFileAfterSend(true);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
-                'error' => [
+                'error'  => [
                     'message' => $e->getMessage()
                 ],
                 'status' => 200
