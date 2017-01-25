@@ -55,12 +55,7 @@ class SchemaController extends BaseController
 
             $this->creator->parseAndBuildMigration($tables, $columns);
 
-            return response()->json([
-                'success' => [
-                    'message' => 'Migration files generated successfully'
-                ],
-                'status' => 200
-            ]);
+            return response()->download(storage_path('migrations.zip'))->deleteFileAfterSend(true);
         } catch(Exception $e) {
             return response()->json([
                 'error' => [

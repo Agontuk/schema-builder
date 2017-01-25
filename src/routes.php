@@ -5,11 +5,11 @@ if ($isLumen) {
     $app->get('schema', 'SchemaController@index');
 
     // Generate database migration files
-    $app->post('api/v1/migration', 'SchemaController@generateMigration');
+    $app->post('schema', 'SchemaController@generateMigration');
 } else {
     // Load views for schema builder
     Route::get('schema', 'SchemaController@index');
 
     // Generate database migration files
-    Route::post('api/v1/migration', 'SchemaController@generateMigration');
+    Route::post('schema', 'SchemaController@generateMigration');
 }
