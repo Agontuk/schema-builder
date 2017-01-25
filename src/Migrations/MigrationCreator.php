@@ -166,20 +166,21 @@ class MigrationCreator extends MigrationCreatorBase
             $type = str_replace('integer', 'increments', $data['type']);
             $type = str_replace('Integer', 'Increments', $type);
 
-            $str .= '$table->' . $type . '(\'' . $data['name'] . '\')';
+            $str .= sprintf('$table->%s(\'%s\')', $type, $data['name']);
         } else {
-            $str .= '$table->' . $data['type'] . '(\'' . $data['name'];
+            $str .= sprintf('$table->%s(\'%s\'', $data['type'], $data['name']);
 
             if (in_array($data['type'], $columnWithLength) && !!$data['length']) {
                 // Add column length
                 $str .= ', ' . $data['length'];
             }
 
-            $str .= '\')';
+            $str .= ')';
         }
 
-        // Default value check
-        !!$data['defValue'] && !$data['autoInc'] ? $str .= '->default(' . $data['defValue'] . ')' : null;
+        // Default value check (only integer for now)
+        // TODO: check if default value is integer or string
+        !!$data['defValue'] && !$data['autoInc'] ? $str .= sprintf('->default(%s)', $data['defValue']) : null;
 
         // Nullable check
         $data['nullable'] ? $str .= '->nullable()' : null;
@@ -194,7 +195,7 @@ class MigrationCreator extends MigrationCreatorBase
         $data['unsigned'] && !$data['autoInc'] ? $str .= '->unsigned()' : null;
 
         // Comment check
-        !!$data['comment'] ? $str .= '->comment(\'' . $data['comment'] . '\')' : null;
+        !!$data['comment'] ? $str .= sprintf('->comment(\'%s\')', $data['comment']) : null;
 
         // End of statement
         $str .= ';';
