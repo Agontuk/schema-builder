@@ -60,12 +60,24 @@ class MigrationCreator extends MigrationCreatorBase
      */
     public function parseAndBuildMigration($tables, $columns)
     {
+        $foreignKeyData = [];
+
         foreach ($tables as $table) {
             $tableColumns = $columns[$table['id']];
             $columnData = [];
 
             foreach ($tableColumns as $column) {
                 $columnData[] = str_repeat(' ', 12) . $this->buildColumnData($column);
+
+                // Handle foreign key relations
+                if (!!$column['foreignKey']['references']['id']) {
+                    $foreignKeyData = array_merge($this->buildForeignKeyData([
+                        'sourceTable'  => $table['name'],
+                        'sourceColumn' => $column['name'],
+                        'targetTable'  => $column['foreignKey']['on']['name'],
+                        'targetColumn' => $column['foreignKey']['references']['name']
+                    ]), $foreignKeyData);
+                }
             }
 
             if ($table['timeStamp']) {
@@ -189,6 +201,26 @@ class MigrationCreator extends MigrationCreatorBase
 
         // End of statement
         $str .= ';';
+
+        return $str;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return array
+     */
+    private function buildForeignKeyData($data) {
+        $str[] = str_repeat(' ', 8) .
+            sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $data['sourceTable']);
+
+        $str[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
+            $data['sourceColumn'], $data['targetColumn'], $data['targetTable']);
+
+        $str[] = str_repeat(' ', 8) . '});';
+
+        // For new line
+        $str[] = '';
 
         return $str;
     }
