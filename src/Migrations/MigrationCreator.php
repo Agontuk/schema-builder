@@ -43,6 +43,16 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
+     * Get the path to the stubs.
+     *
+     * @return string
+     */
+    public function getStubPath()
+    {
+        return __DIR__.'/stubs';
+    }
+
+    /**
      * Parse data and build migration files.
      *
      * @param array $tables
@@ -147,9 +157,9 @@ class MigrationCreator extends MigrationCreatorBase
             $type = str_replace('integer', 'increments', $data['type']);
             $type = str_replace('Integer', 'Increments', $type);
 
-            $str .= '$table->' . $type . '(' . $data['name'] . ')';
+            $str .= '$table->' . $type . '(\'' . $data['name'] . '\')';
         } else {
-            $str .= '$table->' . $data['type'] . '(' . $data['name'];
+            $str .= '$table->' . $data['type'] . '(\'' . $data['name'];
 
             if (in_array($data['type'], $columnWithLength)) {
                 if (!!$data['length']) {
@@ -158,7 +168,7 @@ class MigrationCreator extends MigrationCreatorBase
                 }
             }
 
-            $str .= ')';
+            $str .= '\')';
         }
 
         if (!!$data['defValue'] && !$data['autoInc']) {
@@ -182,7 +192,7 @@ class MigrationCreator extends MigrationCreatorBase
         }
 
         if (!!$data['comment']) {
-            $str .= '->comment(' . $data['comment'] . ')';
+            $str .= '->comment(\'' . $data['comment'] . '\')';
         }
 
         // End of statement
