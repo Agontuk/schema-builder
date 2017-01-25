@@ -26,33 +26,6 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
-     * Get the full path name to the migration.
-     *
-     * @param  string $name
-     * @param  string $path
-     *
-     * @return string
-     */
-    protected function getPath($name, $path = '')
-    {
-        if ($path) {
-            return $path . '/' . $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
-        }
-
-        return $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
-    }
-
-    /**
-     * Get the path to the stubs.
-     *
-     * @return string
-     */
-    public function getStubPath()
-    {
-        return __DIR__ . '/stubs';
-    }
-
-    /**
      * Parse data and build migration files.
      *
      * @param array $tables
@@ -103,26 +76,18 @@ class MigrationCreator extends MigrationCreatorBase
      * @param  array  $columnData
      *
      * @return string
-     * @throws \Exception
      */
     private function createMigration($name, $columnData)
     {
-        $className = 'Create' . $this->getClassName($name) . 'Table';
-        $this->ensureMigrationDoesntAlreadyExist($className);
-
-        $path = $this->getPath($name);
+        $path = $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
 
         // First we will get the stub file for the migration, which serves as a type
         // of template for the migration. Once we have those we will populate the
         // various place-holders, save the file, and run the post create event.
-        $table = $name;
-        $create = true;
-        $stub = $this->getStub($table, $create);
+        $stub = $this->files->get(__DIR__ . '/stubs/create.stub');
 
-        $contents = $this->populateStubWithData($name, $stub, $table, $columnData);
+        $contents = $this->populateStubWithData($name, $stub, $columnData);
         $this->flysystem->put($path, $contents);
-
-        // $this->firePostCreateHooks();
 
         return $path;
     }
@@ -132,18 +97,17 @@ class MigrationCreator extends MigrationCreatorBase
      *
      * @param  string $name
      * @param  string $stub
-     * @param  string $table
      * @param  array  $columnData
      *
      * @return string
      */
-    private function populateStubWithData($name, $stub, $table, $columnData)
+    private function populateStubWithData($name, $stub, $columnData)
     {
         $stub = str_replace('DummyClass', 'Create' . $this->getClassName($name) . 'Table', $stub);
 
         // We will replace the table place-holders with
         // the table specified by the developer.
-        $stub = str_replace('DummyTable', $table, $stub);
+        $stub = str_replace('DummyTable', $name, $stub);
 
         // We will replace the table place-holders with
         // the table specified by the developer.
