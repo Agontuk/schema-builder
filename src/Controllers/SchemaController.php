@@ -56,10 +56,9 @@ class SchemaController extends BaseController
     public function generateMigration(Request $request)
     {
         try {
-            $tables = json_decode($request->get('tables'), true);
-            $columns = json_decode($request->get('columns'), true);
+            $schema = json_decode($request->get('schema'), true);
 
-            $this->creator->parseAndBuildMigration($tables, $columns);
+            $this->creator->parseAndBuildMigration($schema);
 
             return response()->download(storage_path('migrations.zip'))->deleteFileAfterSend(true);
         } catch (Exception $e) {

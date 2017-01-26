@@ -57,11 +57,13 @@ class MigrationCreator extends MigrationCreatorBase
     /**
      * Parse data and build migration files.
      *
-     * @param array $tables
-     * @param array $columns
+     * @param array $schema
      */
-    public function parseAndBuildMigration($tables, $columns)
+    public function parseAndBuildMigration($schema)
     {
+        $tables = $schema['tables'];
+        $columns = $schema['columns'];
+
         foreach ($tables as $table) {
             $tableColumns = $columns[$table['id']];
             $columnData = [];
@@ -92,6 +94,9 @@ class MigrationCreator extends MigrationCreatorBase
             $data = $this->buildForeignKeyData($foreignKeyData);
             $this->createForeignKeyMigration($data['up'], $data['down']);
         }
+
+        // Write the schema into a json file.
+        $this->flysystem->put('schema.json', json_encode($schema, JSON_PRETTY_PRINT));
 
         // All migrations pushed, close the archive.
         $this->flysystem->getAdapter()->getArchive()->close();
