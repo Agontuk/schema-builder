@@ -15,6 +15,11 @@ class MigrationCreator extends MigrationCreatorBase
     private $flysystem;
 
     /**
+     * @var array
+     */
+    private $foreignKeyData = [];
+
+    /**
      * MigrationCreator constructor.
      *
      * @param Filesystem $files
@@ -26,6 +31,30 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
+     * Get foreign key data for all tables.
+     *
+     * @return array
+     */
+    public function getForeignKeyData()
+    {
+        return $this->foreignKeyData;
+    }
+
+    /**
+     * Set foreign key data.
+     *
+     * @param  array $data
+     *
+     * @return $this
+     */
+    public function setForeignKeyData(array $data)
+    {
+        $this->foreignKeyData = array_merge_recursive($this->foreignKeyData, $data);
+
+        return $this;
+    }
+
+    /**
      * Parse data and build migration files.
      *
      * @param array $tables
@@ -33,9 +62,6 @@ class MigrationCreator extends MigrationCreatorBase
      */
     public function parseAndBuildMigration($tables, $columns)
     {
-        $foreignKeyUpData = [];
-        $foreignKeyDownData = [];
-
         foreach ($tables as $table) {
             $tableColumns = $columns[$table['id']];
             $columnData = [];
@@ -45,15 +71,7 @@ class MigrationCreator extends MigrationCreatorBase
 
                 // Handle foreign key relations
                 if (!!$column['foreignKey']['references']['id']) {
-                    $foreignKeyData = $this->buildForeignKeyData([
-                        'sourceTable'  => $table['name'],
-                        'sourceColumn' => $column['name'],
-                        'targetTable'  => $column['foreignKey']['on']['name'],
-                        'targetColumn' => $column['foreignKey']['references']['name']
-                    ]);
-
-                    $foreignKeyUpData = array_merge($foreignKeyData['up'], $foreignKeyUpData);
-                    $foreignKeyDownData = array_merge($foreignKeyData['down'], $foreignKeyDownData);
+                    $this->parseForeignKeyData($table['name'], $column);
                 }
             }
 
@@ -69,9 +87,10 @@ class MigrationCreator extends MigrationCreatorBase
             $this->createMigration($table['name'], $columnData);
         }
 
-        // Write foreign key migration out to disk.
-        if (count($foreignKeyUpData)) {
-            $this->createForeignKeyMigration($foreignKeyUpData, $foreignKeyDownData);
+        if (count($foreignKeyData = $this->getForeignKeyData())) {
+            // Write foreign key migration out to disk.
+            $data = $this->buildForeignKeyData($foreignKeyData);
+            $this->createForeignKeyMigration($data['up'], $data['down']);
         }
 
         // All migrations pushed, close the archive.
@@ -92,7 +111,7 @@ class MigrationCreator extends MigrationCreatorBase
 
         // First we will get the stub file for the migration, which serves as a type
         // of template for the migration. Once we have those we will populate the
-        // various place-holders, save the file, and run the post create event.
+        // various place-holders, save the file, and push it to zip archive.
         $stub = $this->files->get(__DIR__ . '/stubs/create.stub');
 
         $contents = $this->populateStubWithData($name, $stub, $columnData);
@@ -115,7 +134,7 @@ class MigrationCreator extends MigrationCreatorBase
 
         // First we will get the stub file for the migration, which serves as a type
         // of template for the migration. Once we have those we will populate the
-        // various place-holders, save the file, and run the post create event.
+        // various place-holders, save the file, and push it to zip archive.
         $stub = $this->files->get(__DIR__ . '/stubs/foreignKey.stub');
 
         $contents = str_replace('return 1;', implode(PHP_EOL, $upData), $stub);
@@ -142,8 +161,8 @@ class MigrationCreator extends MigrationCreatorBase
         // the table specified by the developer.
         $stub = str_replace('DummyTable', $name, $stub);
 
-        // We will replace the table place-holders with
-        // the table specified by the developer.
+        // We will replace the column place-holders with
+        // the columns specified by the developer.
         $stub = str_replace('return;', implode(PHP_EOL, $columnData), $stub);
 
         return $stub;
@@ -204,32 +223,56 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
+     * @param  string $table
+     * @param  array  $column
+     *
+     * @return bool
+     */
+    private function parseForeignKeyData($table, $column)
+    {
+        $this->setForeignKeyData([
+            $table => [
+                $column['name'] => [
+                    'table'  => $column['foreignKey']['on']['name'],
+                    'column' => $column['foreignKey']['references']['name']
+                ]
+            ]
+        ]);
+
+        return true;
+    }
+
+    /**
      * @param array $data
      *
      * @return array
      */
     private function buildForeignKeyData($data) {
-        $upData[] = str_repeat(' ', 8) .
-            sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $data['sourceTable']);
+        $upData = [];
+        $downData = [];
 
-        $upData[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
-            $data['sourceColumn'], $data['targetColumn'], $data['targetTable']);
+        foreach ($data as $table => $columns) {
+            $upData[] = str_repeat(' ', 8) .
+                sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $table);
 
-        $upData[] = str_repeat(' ', 8) . '});';
+            $downData[] = str_repeat(' ', 8) .
+                sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $table);
 
-        // For new line
-        $upData[] = '';
+            foreach ($columns as $column => $relation) {
+                $upData[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
+                        $column, $relation['column'], $relation['table']);
 
-        $downData[] = str_repeat(' ', 8) .
-            sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $data['sourceTable']);
+                $index = sprintf('%s_%s_foreign', $table, $column);
+                $downData[] = str_repeat(' ', 12) . sprintf('$table->dropForeign(\'%s\');', $index);
+            }
 
-        $index = sprintf('%s_%s_foreign', $data['sourceTable'], $data['sourceColumn']);
-        $downData[] = str_repeat(' ', 12) . sprintf('$table->dropForeign(\'%s\');', $index);
+            $upData[] = str_repeat(' ', 8) . '});';
+            $downData[] = str_repeat(' ', 8) . '});';
 
-        $downData[] = str_repeat(' ', 8) . '});';
-
-        // For new line
-        $downData[] = '';
+            // For new line
+            $upData[] = '';
+            $downData[] = '';
+        }
 
         return [
             'up'   => $upData,
