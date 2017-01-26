@@ -279,6 +279,10 @@ class MigrationCreator extends MigrationCreatorBase
             $downData[] = '';
         }
 
+        // Remove last new line
+        array_pop($upData);
+        array_pop($downData);
+
         return [
             'up'   => $upData,
             'down' => $downData
