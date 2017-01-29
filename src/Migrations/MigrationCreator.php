@@ -110,7 +110,8 @@ class MigrationCreator
     /**
      * Get the class name of a migration name.
      *
-     * @param  string  $name
+     * @param  string $name
+     *
      * @return string
      */
     protected function getClassName($name)
@@ -305,7 +306,8 @@ class MigrationCreator
      *
      * @return array
      */
-    private function buildForeignKeyData(array $data) {
+    private function buildForeignKeyData(array $data)
+    {
         $upData = [];
         $downData = [];
 
