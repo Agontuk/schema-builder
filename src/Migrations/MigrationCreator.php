@@ -2,13 +2,18 @@
 
 namespace Agontuk\Schema\Migrations;
 
-use Illuminate\Database\Migrations\MigrationCreator as MigrationCreatorBase;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\ZipArchive\ZipArchiveAdapter;
 
-class MigrationCreator extends MigrationCreatorBase
+class MigrationCreator
 {
+    /**
+     * @var Filesystem
+     */
+    private $files;
+
     /**
      * @var Flysystem
      */
@@ -26,7 +31,7 @@ class MigrationCreator extends MigrationCreatorBase
      */
     public function __construct(Filesystem $files)
     {
-        parent::__construct($files);
+        $this->files = $files;
         $this->flysystem = new Flysystem(new ZipArchiveAdapter(storage_path('migrations.zip')));
     }
 
@@ -59,7 +64,7 @@ class MigrationCreator extends MigrationCreatorBase
      *
      * @param array $schema
      */
-    public function parseAndBuildMigration($schema)
+    public function parseAndBuildMigration(array $schema)
     {
         $tables = $schema['tables'];
         $columns = $schema['columns'];
@@ -100,6 +105,27 @@ class MigrationCreator extends MigrationCreatorBase
 
         // All migrations pushed, close the archive.
         $this->flysystem->getAdapter()->getArchive()->close();
+    }
+
+    /**
+     * Get the class name of a migration name.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function getClassName($name)
+    {
+        return Str::studly($name);
+    }
+
+    /**
+     * Get the date prefix for the migration.
+     *
+     * @return string
+     */
+    protected function getDatePrefix()
+    {
+        return date('Y_m_d_His');
     }
 
     /**
@@ -162,12 +188,9 @@ class MigrationCreator extends MigrationCreatorBase
     {
         $stub = str_replace('DummyClass', 'Create' . $this->getClassName($name) . 'Table', $stub);
 
-        // We will replace the table place-holders with
-        // the table specified by the developer.
+        // We will replace the table & columns place-holders with
+        // the table & columns specified by the developer.
         $stub = str_replace('DummyTable', $name, $stub);
-
-        // We will replace the column place-holders with
-        // the columns specified by the developer.
         $stub = str_replace('return;', implode(PHP_EOL, $columnData), $stub);
 
         return $stub;
@@ -180,7 +203,7 @@ class MigrationCreator extends MigrationCreatorBase
      *
      * @return string
      */
-    private function buildColumnData($data)
+    private function buildColumnData(array $data)
     {
         $columnWithLength = ['char', 'string'];
         $str = '';
@@ -228,12 +251,15 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
+     * Parse foreign table & column name
+     * for the given table & column.
+     *
      * @param  string $table
      * @param  array  $column
      *
      * @return bool
      */
-    private function parseForeignKeyData($table, $column)
+    private function parseForeignKeyData($table, array $column)
     {
         $this->setForeignKeyData([
             $table => [
@@ -248,11 +274,13 @@ class MigrationCreator extends MigrationCreatorBase
     }
 
     /**
-     * @param array $data
+     * Build foreign key relation strings for migration.
+     *
+     * @param  array $data
      *
      * @return array
      */
-    private function buildForeignKeyData($data) {
+    private function buildForeignKeyData(array $data) {
         $upData = [];
         $downData = [];
 
@@ -264,8 +292,10 @@ class MigrationCreator extends MigrationCreatorBase
                 sprintf('Schema::table(\'%s\', function (Blueprint $table) {', $table);
 
             foreach ($columns as $column => $relation) {
-                $upData[] = str_repeat(' ', 12) . sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
-                        $column, $relation['column'], $relation['table']);
+                $upData[] = str_repeat(' ', 12) .
+                    sprintf('$table->foreign(\'%s\')->references(\'%s\')->on(\'%s\');',
+                        $column, $relation['column'], $relation['table']
+                    );
 
                 $index = sprintf('%s_%s_foreign', $table, $column);
                 $downData[] = str_repeat(' ', 12) . sprintf('$table->dropForeign(\'%s\');', $index);

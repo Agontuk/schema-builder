@@ -22,12 +22,14 @@
     ],
     "require": {
         "ext-zip": "*",
-        "illuminate/database": "5.1.*|5.2.*|5.3.*",
         "illuminate/filesystem": "5.1.*|5.2.*|5.3.*",
         "illuminate/http": "5.1.*|5.2.*|5.3.*",
         "illuminate/support": "5.1.*|5.2.*|5.3.*",
         "league/flysystem": "^1.0",
         "league/flysystem-ziparchive": "^1.0"
+    },
+    "require-dev": {
+        "phpmd/phpmd": "^2.6"
     },
     "autoload": {
         "psr-4": {

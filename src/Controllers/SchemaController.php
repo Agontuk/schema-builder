@@ -51,7 +51,7 @@ class SchemaController extends BaseController
      *
      * @param Request $request
      *
-     * @return \Illuminate\Http\Response
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function generateMigration(Request $request)
     {
