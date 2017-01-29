@@ -197,6 +197,32 @@ class MigrationCreator
     }
 
     /**
+     * Parse & generate default value migration string.
+     *
+     * @param  int|string $value
+     *
+     * @param  boolean    $autoInc
+     *
+     * @return string
+     */
+    private function getDefaultValue($value, $autoInc)
+    {
+        $str = '';
+
+        if ($autoInc) {
+            return $str;
+        }
+
+        if (is_numeric($value)) {
+            $str = sprintf('->default(%s)', (int) $value);
+        } elseif (strlen($value)) {
+            $str = sprintf('->default(\'%s\')', $value);
+        }
+
+        return $str;
+    }
+
+    /**
      * Parse column data and generate command strings.
      *
      * @param  array $data
@@ -225,9 +251,8 @@ class MigrationCreator
             $str .= ')';
         }
 
-        // Default value check (only integer for now)
-        // TODO: check if default value is integer or string
-        !!$data['defValue'] && !$data['autoInc'] ? $str .= sprintf('->default(%s)', $data['defValue']) : null;
+        // Default value check
+        $str .= $this->getDefaultValue($data['defValue'], $data['autoInc']);
 
         // Nullable check
         $data['nullable'] ? $str .= '->nullable()' : null;
