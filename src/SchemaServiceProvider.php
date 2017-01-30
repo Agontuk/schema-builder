@@ -26,7 +26,7 @@ class SchemaServiceProvider extends ServiceProvider
 
         $app = $this->app;
         $isLumen = str_contains($app->version(), 'Lumen');
-        $isEnabled = env('SCHEMA_ROUTES_ENABLED', false) && 'local' == env('APP_ENV');
+        $isEnabled = 'local' == env('APP_ENV');
 
         if ($isLumen && $isEnabled) {
             $app->group(['namespace' => $this->namespace], function () use ($app, $isLumen) {
