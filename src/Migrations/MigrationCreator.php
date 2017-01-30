@@ -25,6 +25,11 @@ class MigrationCreator
     private $foreignKeyData = [];
 
     /**
+     * @var int
+     */
+    private $timeInterval = 0;
+
+    /**
      * MigrationCreator constructor.
      *
      * @param Filesystem $files
@@ -60,17 +65,34 @@ class MigrationCreator
     }
 
     /**
+     * Get current interval value.
+     *
+     * @return int
+     */
+    public function getTimeInterval()
+    {
+        return $this->timeInterval;
+    }
+
+    /**
+     * Set time interval.
+     *
+     * @param int $timeInterval
+     */
+    public function setTimeInterval($timeInterval)
+    {
+        $this->timeInterval = $timeInterval;
+    }
+
+    /**
      * Parse data and build migration files.
      *
      * @param array $schema
      */
     public function parseAndBuildMigration(array $schema)
     {
-        $tables = $schema['tables'];
-        $columns = $schema['columns'];
-
-        foreach ($tables as $table) {
-            $tableColumns = $columns[$table['id']];
+        foreach ($schema['tables'] as $table) {
+            $tableColumns = $schema['columns'][$table['id']];
             $columnData = [];
 
             foreach ($tableColumns as $column) {
@@ -114,7 +136,7 @@ class MigrationCreator
      *
      * @return string
      */
-    protected function getClassName($name)
+    private function getClassName($name)
     {
         return Str::studly($name);
     }
@@ -124,9 +146,9 @@ class MigrationCreator
      *
      * @return string
      */
-    protected function getDatePrefix()
+    private function getDatePrefix()
     {
-        return date('Y_m_d_His');
+        return date('Y_m_d_His', time() + $this->getTimeInterval());
     }
 
     /**
@@ -139,6 +161,10 @@ class MigrationCreator
      */
     private function createMigration($name, $columnData)
     {
+        // Update time interval each time so that migration
+        // files are created with different timestamp.
+        $this->setTimeInterval($this->getTimeInterval() + 60);
+
         $path = $this->getDatePrefix() . '_create_' . $name . '_table' . '.php';
 
         // First we will get the stub file for the migration, which serves as a type
@@ -162,6 +188,10 @@ class MigrationCreator
      */
     private function createForeignKeyMigration($upData, $downData)
     {
+        // Update time interval each time so that migration
+        // files are created with different timestamp.
+        $this->setTimeInterval($this->getTimeInterval() + 60);
+
         $path = $this->getDatePrefix() . '_create_foreign_keys_table.php';
 
         // First we will get the stub file for the migration, which serves as a type
