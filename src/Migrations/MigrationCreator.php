@@ -10,6 +10,16 @@ use League\Flysystem\ZipArchive\ZipArchiveAdapter;
 class MigrationCreator
 {
     /**
+     * @const array
+     */
+    const COLUMN_WITH_LENGTH = ['char', 'decimal', 'double', 'float', 'string'];
+
+    /**
+     * @const array
+     */
+    const FRACTION_COLUMN = ['decimal', 'double', 'float'];
+
+    /**
      * @var Filesystem
      */
     private $files;
@@ -254,6 +264,37 @@ class MigrationCreator
     }
 
     /**
+     * Parse & generate column length.
+     *
+     * @param  string $type
+     * @param  string $value
+     *
+     * @return string
+     */
+    private function getColumnLength($type, $value)
+    {
+        $str = '';
+
+        if (in_array($type, self::COLUMN_WITH_LENGTH) && !!$value) {
+            if (in_array($type, self::FRACTION_COLUMN)) {
+                // Explode into array to get precision & scale value
+                $data = explode(',', $value);
+
+                // In case users only provide single value
+                if (count($data) == 1 && is_numeric($data[0])) {
+                    $str .= ', ' . $data[0];
+                } elseif (count($data) == 2 && is_numeric($data[0]) && is_numeric($data[1])) {
+                    $str .= ', ' . $data[0] . ', ' . $data[1];
+                }
+            } elseif (is_numeric($value)) {
+                $str .= ', ' . $value;
+            }
+        }
+
+        return $str;
+    }
+
+    /**
      * Parse column data and generate command strings.
      *
      * @param  array $data
@@ -262,7 +303,6 @@ class MigrationCreator
      */
     private function buildColumnData(array $data)
     {
-        $columnWithLength = ['char', 'string'];
         $str = '';
 
         if ($data['autoInc']) {
@@ -274,10 +314,7 @@ class MigrationCreator
         } else {
             $str .= sprintf('$table->%s(\'%s\'', $data['type'], $data['name']);
 
-            if (in_array($data['type'], $columnWithLength) && !!$data['length']) {
-                // Add column length
-                $str .= ', ' . $data['length'];
-            }
+            $str .= $this->getColumnLength($data['type'], $data['length']);
 
             $str .= ')';
         }
