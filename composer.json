@@ -1,6 +1,6 @@
 {
     "name": "agontuk/schema-builder",
-    "description": "Schema designing & migration generator for laravel & lumen",
+    "description": "Schema designer & migration generator for laravel & lumen",
     "version": "1.0.0-dev",
     "type": "library",
     "keywords": [
