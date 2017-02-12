@@ -43,7 +43,13 @@ class SchemaController extends BaseController
         $js = file_get_contents(__DIR__ . '/../resources/jsplumb.min.js') . "\n";
         $js .= file_get_contents(__DIR__ . '/../resources/schema.js');
 
-        return view('schema::index')->with(compact('css', 'js'));
+        $csrfToken = '';
+
+        if (function_exists('csrf_token')) {
+            $csrfToken = csrf_token();
+        }
+
+        return view('schema::index')->with(compact('css', 'js', 'csrfToken'));
     }
 
     /**
