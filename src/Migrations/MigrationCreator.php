@@ -132,8 +132,8 @@ class MigrationCreator
             $this->createForeignKeyMigration($data['up'], $data['down']);
         }
 
-        // Write the schema into a json file.
-        $this->flysystem->put('schema.json', json_encode($schema, JSON_PRETTY_PRINT));
+        // Write the schema into a txt file.
+        $this->flysystem->put('schema.txt', json_encode($schema, JSON_PRETTY_PRINT));
 
         // All migrations pushed, close the archive.
         $this->flysystem->getAdapter()->getArchive()->close();
