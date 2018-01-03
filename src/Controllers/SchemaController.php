@@ -66,7 +66,9 @@ class SchemaController extends BaseController
 
             $this->creator->parseAndBuildMigration($schema);
 
-            return response()->download(storage_path('migrations.zip'))->deleteFileAfterSend(true);
+            $db_name = $schema['database']['name'] . date("_Y-m-d_H:i:s") . ".zip";
+
+	    return response()->download(storage_path('migrations.zip'), $db_name)->deleteFileAfterSend(true);
         } catch (Exception $e) {
             return response()->json([
                 'error'  => [
