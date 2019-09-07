@@ -22,11 +22,13 @@
     ],
     "require": {
         "ext-zip": "*",
-        "illuminate/filesystem": "5.1.*|5.2.*|5.3.*|5.4.*|5.5.*",
-        "illuminate/http": "5.1.*|5.2.*|5.3.*|5.4.*|5.5.*",
-        "illuminate/support": "5.1.*|5.2.*|5.3.*|5.4.*|5.5.*",
-        "league/flysystem": "^1.0",
+        "league/flysystem": "^1.0.8",
         "league/flysystem-ziparchive": "^1.0"
+    },
+    "replace": {
+        "illuminate/filesystem": "self.version",
+        "illuminate/http": "self.version",
+        "illuminate/support": "self.version"
     },
     "require-dev": {
         "phpmd/phpmd": "^2.6"
