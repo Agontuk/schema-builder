@@ -1,5 +1,5 @@
 {
-    "name": "noud/schema-builder",
+    "name": "agontuk/schema-builder",
     "description": "Schema designer & migration generator for laravel & lumen",
     "version": "master",
     "type": "library",
@@ -10,7 +10,7 @@
         "schema design",
         "migration generator"
     ],
-    "homepage": "https://github.com/noud/schema-builder",
+    "homepage": "https://github.com/agontuk/schema-builder",
     "license": "MIT",
     "authors": [
         {
