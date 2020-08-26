@@ -25,7 +25,7 @@ class SchemaServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/resources', 'schema');
 
         $app = $this->app;
-        $isLumen = str_contains($app->version(), 'Lumen');
+        $isLumen = (strpos($app->version(), 'Lumen') !== false);
         $isEnabled = env('SCHEMA_ROUTES_ENABLED', false) && 'local' == env('APP_ENV');
 
         if ($isLumen && $isEnabled) {
