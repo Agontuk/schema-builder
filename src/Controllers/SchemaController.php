@@ -31,6 +31,16 @@ class SchemaController extends BaseController
         $this->creator = $creator;
     }
 
+    private function get_resources(string $pattern)
+    {
+        $resources = '';
+        $list = glob($pattern);
+        foreach ($list as $file) {
+            $resources .= file_get_contents($file) . "\n";
+        }
+        return $resources;
+    }
+
     /**
      * Load the schema designer.
      *
@@ -38,10 +48,8 @@ class SchemaController extends BaseController
      */
     public function index()
     {
-        $css = file_get_contents(__DIR__ . '/../resources/schema.css');
-
-        $js = file_get_contents(__DIR__ . '/../resources/jsplumb.min.js') . "\n";
-        $js .= file_get_contents(__DIR__ . '/../resources/schema.js');
+        $css = $this->get_resources(__DIR__ . '/../resources/*.css');
+        $js = $this->get_resources(__DIR__ . '/../resources/*.js');
 
         $csrfToken = '';
 
