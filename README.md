@@ -7,11 +7,18 @@ Checkout **[agontuk.github.io/schema-designer](https://agontuk.github.io/schema-
 ```php
 composer require --dev agontuk/schema-builder
 ```
-Then register SchemaServiceProvider, for laravel on `providers` array in `config/app.php`,
+
+For Laravel(>=5.5) this package utilises package auto-discovery. There is no need to add the service providers manually. You may notice the following message post-autoload.
+
+```bash
+Discovered Package: agontuk/schema-builder
+```
+
+or for Laravel(<5.5), register SchemaServiceProvider on the `providers` array in `config/app.php`,
 ```php
 \Agontuk\Schema\SchemaServiceProvider::class
 ```
-or for lumen in `bootstrap/app.php`
+or for Lumen in `bootstrap/app.php`
 ```php
 $app->register(\Agontuk\Schema\SchemaServiceProvider::class);
 ```
