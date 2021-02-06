@@ -1,4 +1,6 @@
 # Laravel/Lumen schema builder
+![schema-builder](./doc/schema-builder.png?raw=true "schema-builder")
+
 Database designer & migration generator package for laravel & lumen.
 
 Checkout **[agontuk.github.io/schema-designer](https://agontuk.github.io/schema-designer)** to see how it works.
