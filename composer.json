@@ -22,9 +22,9 @@
     ],
     "require": {
         "ext-zip": "*",
-        "illuminate/filesystem": "^5.1|^6|^7|^8.0",
-        "illuminate/http": "^5.1|^6|^7|^8.0",
-        "illuminate/support": "^5.1|^6|^7|^8.0",
+        "illuminate/filesystem": "^5.1|^6|^7|^8",
+        "illuminate/http": "^5.1|^6|^7|^8",
+        "illuminate/support": "^5.1|^6|^7|^8",
         "league/flysystem": "^1.0",
         "league/flysystem-ziparchive": "^1.0"
     },
