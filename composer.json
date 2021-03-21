@@ -1,20 +1,16 @@
 {
-    "name": "noud/schema-builder",
+    "name": "agontuk/schema-builder",
     "description": "Schema designer & migration generator for laravel & lumen",
-    "version": "1.3.2",
+    "version": "1.3.0",
     "type": "library",
     "keywords": [
-        "entity",
-        "relationship",
-        "diagram",
         "schema",
         "database",
         "schema builder",
         "schema design",
-        "laravel",
         "migration generator"
     ],
-    "homepage": "https://github.com/noud/schema-builder",
+    "homepage": "https://github.com/Agontuk/schema-builder",
     "license": "MIT",
     "authors": [
         {
@@ -26,9 +22,9 @@
     ],
     "require": {
         "ext-zip": "*",
-        "illuminate/filesystem": "^8.0",
-        "illuminate/http": "^8.0",
-        "illuminate/support": "^8.0",
+        "illuminate/filesystem": "^5.1|^6|^7|^8.0",
+        "illuminate/http": "^5.1|^6|^7|^8.0",
+        "illuminate/support": "^5.1|^6|^7|^8.0",
         "league/flysystem": "^1.0",
         "league/flysystem-ziparchive": "^1.0"
     },
