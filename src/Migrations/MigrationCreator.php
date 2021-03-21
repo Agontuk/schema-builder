@@ -129,7 +129,7 @@ class MigrationCreator
         if (count($foreignKeyData = $this->getForeignKeyData())) {
             // Write foreign key migration out to disk.
             $data = $this->buildForeignKeyData($foreignKeyData);
-            $this->createForeignKeyMigration($data['up'], $data['down']);
+            $this->createForeignKeyMigration($data['up'], $data['down'], $schema['database']['name']);
         }
 
         // Write the schema into a txt file.
@@ -196,18 +196,28 @@ class MigrationCreator
      *
      * @return string
      */
-    private function createForeignKeyMigration($upData, $downData)
+    private function createForeignKeyMigration($upData, $downData, $schemaName = null)
     {
         // Update time interval each time so that migration
         // files are created with different timestamp.
         $this->setTimeInterval($this->getTimeInterval() + 60);
 
-        $path = $this->getDatePrefix() . '_create_foreign_keys_table.php';
+        $schemaPart = $classPart = '';
+
+        if ($schemaName) {
+            $schemaPart = '_for_' . str_replace(' ', '_', $schemaName);
+        }
+        $path = $this->getDatePrefix() . '_create_foreign_keys_table' . $schemaPart . '.php';
+
+        if ($schemaName) {
+            $classPart = 'For' . str_replace(' ', '', ucwords(str_replace('_', ' ', $schemaName)));
+        }
 
         // First we will get the stub file for the migration, which serves as a type
         // of template for the migration. Once we have those we will populate the
         // various place-holders, save the file, and push it to zip archive.
         $stub = $this->files->get(__DIR__ . '/stubs/foreignKey.stub');
+        $stub = str_replace('ForSchema', $classPart, $stub);
 
         $contents = str_replace('return 1;', implode(PHP_EOL, $upData), $stub);
         $contents = str_replace('return 2;', implode(PHP_EOL, $downData), $contents);
